@@ -148,6 +148,20 @@ class ClassificationOutputAdapter(OutputAdapter):
     def forward(self, x):
         return self.linear(x).squeeze(dim=1)
 
+class SemanticSegOutputAdapter(OutputAdapter):
+    def __init__(self,
+                 num_classes: int,
+                 num_outputs: int = 1,
+                 num_output_channels: Optional[int] = None):
+
+        if num_output_channels is None:
+            num_output_channels = num_classes
+
+        super().__init__(output_shape=(num_outputs, num_output_channels))
+        self.linear = nn.Linear(num_output_channels, num_classes)
+
+    def forward(self, x):
+        return x
 
 class TextOutputAdapter(ClassificationOutputAdapter):
     def __init__(self,

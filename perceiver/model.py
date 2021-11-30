@@ -173,7 +173,7 @@ class PerceiverEncoder(nn.Module):
         with torch.no_grad():
             self.latent.normal_(0.0, 0.02).clamp_(-2.0, 2.0)
 
-    def forward(self, x, pad_mask=None):
+    def forward(self, x, pad_mask=None, attn_mask=None):
         b, *_ = x.shape
 
         # encode task-specific input
@@ -182,11 +182,11 @@ class PerceiverEncoder(nn.Module):
         # repeat initial latent vector along batch dimension
         x_latent = repeat(self.latent, '... -> b ...', b=b)
 
-        x_latent = self.layer_1(x_latent, x, pad_mask)
+        x_latent = self.layer_1(x_latent, x, pad_mask, attn_mask)
         for i in range(self.num_layers - 1):
-            x_latent = self.layer_n(x_latent, x, pad_mask)
+            x_latent = self.layer_n(x_latent, x, pad_mask, attn_mask)
 
-        return x_latent
+        return x_latent, pad_mask
 
 
 class PerceiverDecoder(nn.Module):
@@ -226,7 +226,7 @@ class PerceiverDecoder(nn.Module):
         with torch.no_grad():
             self.output.normal_(0.0, 0.02).clamp_(-2.0, 2.0)
 
-    def forward(self, x):
+    def forward(self, x, pad_mask):
         b, *d = x.shape
 
         if tuple(d) != self.latent_shape:
